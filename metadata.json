@@ -1,0 +1,8 @@
+{
+  "name": "SaveRaks2",
+  "description": "Gamified sustainability platform for Surasakmontree School students. Recycle, report issues, and track eco-impact.",
+  "requestFramePermissions": [
+    "camera",
+    "geolocation"
+  ]
+}
