@@ -17,7 +17,7 @@ const IssueReporter: React.FC<IssueReporterProps> = ({ onActivityLogged }) => {
   const [submitting, setSubmitting] = useState(false);
 
   // Use local map image (Ensure map.jpg is in the project root)
-  const mapImage = "./map.jpg";
+  const mapImage = "./school.jpg";
 
   const handleMapClick = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
