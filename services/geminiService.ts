@@ -3,7 +3,7 @@ import { GoogleGenAI, Type } from "@google/genai";
 // Initialize Gemini Client
 // NOTE: In a real production app, you should proxy requests through a backend to hide the API key.
 // Since this is a client-side demo instructions, we use the env variable directly.
-const apiKey = process.env.API_KEY || ''; 
+const apiKey = process.env.API_KEY || 'AIzaSyAL09G8TkOclQ87iIsxzad8D8zqsD7uhlEAIzaSyAL09G8TkOclQ87iIsxzad8D8zqsD7uhlE'; 
 const ai = new GoogleGenAI({ apiKey });
 
 /**
