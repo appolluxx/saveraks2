@@ -1,27 +1,31 @@
+
 import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
+import PointsSummary from './components/PointsSummary';
 import LevelProgress from './components/LevelProgress';
-import RecycleScanner from './components/RecycleScanner';
+import EcoScanner from './components/RecycleScanner';
 import IssueReporter from './components/IssueReporter';
 import ActionLogger from './components/ActionLogger';
 import Feed from './components/Feed';
 import Leaderboard from './components/Leaderboard';
+import Marketplace from './components/Marketplace';
 import LoginScreen from './components/LoginScreen';
-import { getUserProfile, logoutUser } from './services/mockBackend';
+import AdminDashboard from './components/AdminDashboard';
+import Logo from './components/Logo';
+import { getUserProfile, logoutUser, updateUserPoints } from './services/api';
 import { User } from './types';
 import { LogOut } from 'lucide-react';
 
 const App: React.FC = () => {
   const [currentTab, setCurrentTab] = useState('home');
   const [user, setUser] = useState<User | null>(null);
-  const [showConfetti, setShowConfetti] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Load user data on mount
   useEffect(() => {
     const loadUser = async () => {
       const data = await getUserProfile();
       setUser(data);
+      if (data?.role === 'ADMIN') setCurrentTab('admin');
       setLoading(false);
     };
     loadUser();
@@ -30,85 +34,73 @@ const App: React.FC = () => {
   const refreshUser = async () => {
     const data = await getUserProfile();
     setUser(data);
-    setShowConfetti(true);
-    setTimeout(() => setShowConfetti(false), 2000);
+  };
+
+  const handleRedeem = async (cost: number) => {
+    await updateUserPoints(-cost);
+    refreshUser();
   };
 
   const handleLogout = () => {
-    logoutUser(); // Clear storage
-    setUser(null); // Clear state immediately to show LoginScreen
+    logoutUser(); 
+    setUser(null); 
+    setCurrentTab('home');
   };
 
-  if (loading) return null; // Or a loading spinner
+  if (loading) return (
+    <div className="min-h-screen flex flex-col items-center justify-center bg-obsidian">
+      <div className="w-12 h-12 border-2 border-primary/20 rounded-full border-t-primary animate-spin"></div>
+    </div>
+  );
 
-  if (!user) {
-    return <LoginScreen onLoginSuccess={setUser} />;
-  }
+  if (!user) return <LoginScreen onLoginSuccess={setUser} />;
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-gray-900 font-sans pb-20">
-      {/* Sticky Top Header */}
-      <header className="sticky top-0 bg-white/80 backdrop-blur-md z-40 px-6 py-4 border-b border-gray-100 flex justify-between items-center">
-        <h1 className="text-2xl font-black text-emerald-600 tracking-tight flex items-center gap-2">
-          SaveRaks
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-        </h1>
+    <div className="min-h-screen bg-obsidian text-slate-100 font-sans pb-32 overflow-x-hidden">
+      <div className="fixed top-0 left-1/4 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] -z-10"></div>
+      
+      <header className="sticky top-0 glass z-50 px-6 py-4 flex justify-between items-center border-b border-white/5">
+        <div className="flex items-center gap-3">
+          <Logo size="sm" />
+          <h1 className="text-xl font-black tracking-tight text-white uppercase italic">SaveRaks</h1>
+        </div>
         <div className="flex items-center gap-3">
             <button 
-              type="button" 
               onClick={handleLogout} 
-              className="text-gray-400 hover:text-red-500 transition-colors p-2 rounded-full hover:bg-gray-100"
-              title="Logout"
+              className="p-2.5 rounded-xl bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 transition-all border border-white/5 active:scale-90"
             >
-                <LogOut size={20} />
+              <LogOut size={20} />
             </button>
-            <div className="w-8 h-8 rounded-full bg-gray-200 overflow-hidden border border-gray-300">
-                <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`} alt="avatar" />
+            <div className="w-10 h-10 rounded-xl bg-surface border border-border overflow-hidden ring-1 ring-white/5">
+                <img 
+                  src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`} 
+                  alt="avatar" 
+                  className="w-full h-full object-cover"
+                />
             </div>
         </div>
       </header>
 
-      {/* Main Content Area */}
-      <main className="px-4 pt-6 max-w-md mx-auto">
-        <LevelProgress user={user} />
-        
-        {/* XP Gain Notification Overlay */}
-        {showConfetti && (
-          <div className="fixed top-20 left-1/2 transform -translate-x-1/2 bg-yellow-400 text-yellow-900 px-6 py-2 rounded-full font-bold shadow-xl z-50 animate-bounce">
-            XP Updated! ⭐
+      <main className="px-6 pt-8 max-w-xl mx-auto space-y-8">
+        {user.role !== 'ADMIN' && currentTab !== 'market' && (
+          <div className="space-y-4">
+            <PointsSummary user={user} />
+            <LevelProgress user={user} />
           </div>
         )}
-
-        <div className="min-h-[60vh]">
+        
+        <section className="animate-in fade-in slide-in-from-bottom-4 duration-500">
           {currentTab === 'home' && <Feed />}
-          
-          {currentTab === 'recycle' && (
-            <div className="animate-in fade-in slide-in-from-bottom-4">
-              <RecycleScanner onActivityLogged={refreshUser} />
-            </div>
-          )}
-          
-          {currentTab === 'actions' && (
-            <div className="animate-in fade-in slide-in-from-bottom-4">
-              <ActionLogger onActivityLogged={refreshUser} />
-            </div>
-          )}
-          
-          {currentTab === 'map' && (
-            <div className="animate-in fade-in slide-in-from-bottom-4">
-              <IssueReporter onActivityLogged={refreshUser} />
-            </div>
-          )}
-
-          {currentTab === 'leaderboard' && (
-            <div className="animate-in fade-in slide-in-from-bottom-4">
-              <Leaderboard />
-            </div>
-          )}
-        </div>
+          {currentTab === 'recycle' && <EcoScanner onActivityLogged={refreshUser} />}
+          {currentTab === 'actions' && <ActionLogger onActivityLogged={refreshUser} />}
+          {currentTab === 'map' && <IssueReporter onActivityLogged={refreshUser} />}
+          {currentTab === 'leaderboard' && <Leaderboard />}
+          {currentTab === 'market' && <Marketplace user={user} onRedeem={handleRedeem} />}
+          {currentTab === 'admin' && user.role === 'ADMIN' && <AdminDashboard />}
+        </section>
       </main>
 
-      <Navbar currentTab={currentTab} setTab={setCurrentTab} />
+      <Navbar currentTab={currentTab} setTab={setCurrentTab} isDarkMode={true} toggleDarkMode={() => {}} userRole={user.role} />
     </div>
   );
 };
